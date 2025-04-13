@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Home</title>
+
+    <style>
+      * { box-sizing: border-box; }
+      main { padding-left: 300px; }
+      @media only screen and (max-width : 992px) {
+        main { padding-left: 0; }
+      }
+      #formRow {
+        width: 100%; margin-left: auto; margin-right: auto; background-color: blue;
+        margin-top: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="row" style="position: absolute; height:20px; top:0; z-index:10; width:100vw">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="blue lighten-5 col s10 offset-s1">
+              <div class="row"> 
+                <div class="col s11" style="font-weight: bold;text-align: center">
+                  {{ message }}
+                </div>
+                <div class="col s1">
+                  <a href="" style="font-size:1.5em" >&times;</a>
+                </div>  
+              </div>
+            </div> 
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <ul id="slide-out" class="sidenav sidenav-fixed">
+      <nav class="nav-extended purple" style="margin-bottom:10px">
+        <div class="nav-wrapper">
+          <a href="#" style="font-size:1.5em" class="brand-logo left">Logged in As: {{ user.username }}</a>
+        </div>
+      </nav>
+
+      <div class="input-field col s12">
+        <select class="icons" name="student_id" onchange="window.location.href = '/app/' + this.value">
+          <option value="" disabled>Choose your option</option>
+          {% for s in students %}
+            <option value="{{ s.id }}" data-icon="{{ s.image }}" {% if selected_student and s.id == selected_student.id %}selected{% endif %}>
+              {{ s.first_name }} {{ s.last_name }}
+            </option>
+          {% endfor %}
+        </select>
+        <label>Select Student</label>
+      </div>
+
+      <div class="col s12 center-align" style="margin-top: 20px;">
+        {% if selected_student %}
+          <img src="{{ selected_student.image }}" alt="Student Image" class="circle responsive-img" style="width:100px"><br>
+          <b>{{ selected_student.first_name }} {{ selected_student.last_name }}</b><br>
+          {{ selected_student.programme }}<br>
+          Started: {{ selected_student.start_year }}<br><br>
+          {% if avg_rating %}
+            <b>Avg Rating:</b> {{ avg_rating }}/5
+          {% else %}
+            <b>No ratings yet</b>
+          {% endif %}
+        {% endif %}
+      </div>
+    </ul>
+
+    <main class="col s12">
+      <nav class="nav-extended purple" style="margin-bottom:10px">
+        <div class="nav-wrapper">
+          <span style="margin-left: 10px;">
+            Create Review for {{ selected_student.first_name }} {{ selected_student.last_name }}
+          </span>
+          <ul id="nav-mobile" class="right">
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </div>
+        <div class="nav-content purple">
+          <form method="POST" action="{{ url_for('submit_review') }}">
+            <input type="hidden" name="student_id" value="{{ selected_student.id }}">
+
+            <div class="row" style="width: 95%">
+              <div class="input-field col s10 offset-s1">
+                <textarea name="text" class="materialize-textarea" required></textarea>
+                <label for="text">Review Text</label>
+              </div>
+
+              <div class="input-field col s1 offset-s1">Rating:</div>
+              <div class="input-field col s4">
+                <p class="range-field">
+                  <input type="range" name="rating" min="0" max="5" required />
+                </p>
+              </div>
+
+              <div class="input-field col s3 offset-s3">
+                <input type="submit" class="btn" value="Create">
+              </div>
+            </div>
+          </form>
+        </div>
+      </nav>
+
+      <div class="row" style="width: 95%; height: 67vh; overflow-y:scroll; margin-left: auto; margin-right: auto;">
+        <div class="col s12">
+          {% if reviews %}
+            {% for review in reviews %}
+              <div class="card">
+                <div class="card-content">
+                  <span class="card-title">
+                    {{ review.user.username }}
+                    {% if review.user_id == user.id %}
+                      <a href="{{ url_for('delete_review', review_id=review.id, student_id=selected_student.id) }}" class="secondary-content">
+                        <i class="material-icons red-text">delete</i>
+                      </a>
+                    {% endif %}
+                  </span>
+                  <p><b>Rating:</b> {{ review.rating }}/5</p>
+                  <p>{{ review.text }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p>No reviews yet for this student.</p>
+          {% endif %}
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script> M.AutoInit(); </script>
+  </body>
+</html>
